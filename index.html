@@ -212,15 +212,35 @@
 
     soldiers = [];
     const soldierCount = Math.min(6 + level * 3, 12);
-    const rPos = [
-      { x: 450, y: 308 }, { x: 750, y: 308 }, { x: 1000, y: 308 }, { x: 1300, y: 308 },
-      { x: 1600, y: 308 }, { x: 1900, y: 308 }, { x: 690, y: 224 }, { x: 1040, y: 144 },
-      { x: 1510, y: 224 }, { x: 550, y: 308 }, { x: 1200, y: 308 }, { x: 1800, y: 308 }
-    ].slice(0, soldierCount);
 
-    for (const r of rPos) {
+    // בוחרים פלטפורמות בפועל מתוך השלב הנוכחי (במקום קואורדינטות קשיחות
+    // שלא תמיד מתאימות לכל שלב) - כך מובטח שהחיילים תמיד עומדים נכון.
+    const groundPlat = platforms.find(p => p.type === "ground");
+    const elevatedPlats = platforms.filter(p => p.type === "plat");
+
+    // פיזור אחיד של נקודות על הקרקע (הרוב), בתוספת כמה פלטפורמות מורמות
+    const spawnSpecs = [];
+    const groundSpotCount = Math.ceil(soldierCount * 0.6);
+    for (let i = 0; i < groundSpotCount; i++) {
+      const t = (i + 1) / (groundSpotCount + 1);
+      spawnSpecs.push({
+        x: 300 + t * (levelWidth - 600),
+        platform: groundPlat
+      });
+    }
+    const elevatedNeeded = soldierCount - groundSpotCount;
+    for (let i = 0; i < elevatedNeeded && elevatedPlats.length > 0; i++) {
+      const p = elevatedPlats[i % elevatedPlats.length];
+      spawnSpecs.push({
+        x: p.x + p.w / 2,
+        platform: p
+      });
+    }
+
+    for (const spec of spawnSpecs) {
+      const p = spec.platform;
       soldiers.push({
-        x: r.x, y: r.y, w: 32, h: 32,
+        x: spec.x, y: p.y - 32, w: 32, h: 32,
         vx: (Math.random() < 0.5 ? -1 : 1) * (1.2 + level * 0.4),
         alive: true, frame: 0, ft: 0
       });
